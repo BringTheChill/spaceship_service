@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 const TextStyle _kStepStyle = TextStyle(
-  fontSize: 12.0,
+  fontSize: 24.0,
   color: Colors.white,
 );
 const Color _kErrorLight = Colors.red;
@@ -16,7 +17,7 @@ const Color _kCircleActiveDark = Colors.black87;
 const Color _kDisabledLight = Colors.black38;
 const Color _kDisabledDark = Colors.white38;
 const Color _kCompleteColor = Color(0XFF068A06);
-const double _kStepSize = 24.0;
+const double _kStepSize = 30.0;
 const double _kTriangleHeight =
     _kStepSize * 0.866025; // Triangle height. sqrt(3.0) / 2.0
 
@@ -474,7 +475,14 @@ class _CustomStepperState extends State<CustomStepper>
           style: _titleStyle(index),
           duration: kThemeAnimationDuration,
           curve: Curves.fastOutSlowIn,
-          child: widget.steps[index].title,
+          child: Visibility(
+            maintainAnimation: true,
+            maintainState: true,
+            maintainSize: true,
+            visible:
+                widget.steps[index].state == StepState.indexed ? true : false,
+            child: widget.steps[index].title,
+          ),
         ),
         if (widget.steps[index].subtitle != null)
           Container(
@@ -644,7 +652,6 @@ class _CustomStepperState extends State<CustomStepper>
         Expanded(
           child: ListView(
             physics: widget.physics,
-            padding: const EdgeInsets.all(24.0),
             children: <Widget>[
               AnimatedSize(
                 curve: Curves.fastOutSlowIn,
