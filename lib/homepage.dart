@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:spaceship_service/widgets/custom_stepper.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import 'constants.dart';
 import 'models/cart_item.dart';
 import 'models/product.dart';
+import 'time_utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key, required this.title}) : super(key: key);
@@ -25,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   List<String> columnNames = ['Produs', 'Cantitate', 'Preț Unitar', 'Total'];
 
   TextEditingController quantityController = TextEditingController();
-
+  String? productText;
   Product? selectedProduct;
   List<Product> availableProducts = [
     Product(
@@ -41,10 +44,16 @@ class _HomePageState extends State<HomePage> {
       price: 25.50,
     ),
   ];
-  // List<Product> selectedProducts = [];
   List<CartItem> cartItems = [];
+  List<TimeOfDay> times = [];
 
   addProduct() {
+    bool isRealProduct =
+        availableProducts.any((element) => element.name == productText);
+    if (isRealProduct) {
+      selectedProduct = availableProducts
+          .firstWhere((element) => element.name == productText);
+    }
     setState(() {
       if (selectedProduct != null && quantityController.text.isNotEmpty) {
         CartItem alreadyExist = cartItems.firstWhere(
@@ -68,8 +77,46 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         }
+      } else if (quantityController.text.isEmpty) {
+        Fluttertoast.showToast(msg: 'Adaugă te rog o cantitate.');
+      } else {
+        Fluttertoast.showToast(msg: 'Acest produs nu este disponibil.');
       }
     });
+  }
+
+  DateTime? _selectedDay;
+  DateTime _focusedDay = DateTime.now();
+  int selectedIndex = -1;
+
+  Iterable<TimeOfDay> getTimes(
+      TimeOfDay startTime, TimeOfDay endTime, Duration step) sync* {
+    var hour = startTime.hour;
+    var minute = startTime.minute;
+
+    do {
+      yield TimeOfDay(hour: hour, minute: minute);
+      minute += step.inMinutes;
+      while (minute >= 60) {
+        minute -= 60;
+        hour++;
+      }
+    } while (hour < endTime.hour ||
+        (hour == endTime.hour && minute <= endTime.minute));
+  }
+
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if (!isSameDay(_selectedDay, selectedDay)) {
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+        selectedIndex = -1;
+      });
+    }
+  }
+
+  List<TimeOfDay> _getTimeForDay(DateTime day) {
+    return kTime[day] ?? [];
   }
 
   tapped(int step) {
@@ -77,11 +124,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   continued() {
-    _currentStep < 1 ? setState(() => _currentStep += 1) : null;
+    if (_currentStep == 0 && cartItems.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Adaugă ceva dacă vrei să continui",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      debugPrint('t');
+    } else {
+      _currentStep < 1 ? setState(() => _currentStep += 1) : null;
+    }
   }
 
   cancel() {
     _currentStep > 0 ? setState(() => _currentStep -= 1) : null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _focusedDay;
+
+    times = getTimes(
+      TimeOfDay.fromDateTime(
+        DateTime(
+          _focusedDay.year,
+          _focusedDay.month,
+          _focusedDay.day,
+          08,
+        ),
+      ),
+      TimeOfDay.fromDateTime(
+        DateTime(
+          _focusedDay.year,
+          _focusedDay.month,
+          _focusedDay.day,
+          16,
+          00,
+        ),
+      ),
+      const Duration(hours: 1),
+    ).map((tod) => tod).toList();
   }
 
   @override
@@ -267,6 +350,7 @@ class _HomePageState extends State<HomePage> {
                                                 focusNode: focusNode,
                                                 onChanged: (text) {
                                                   setState(() {
+                                                    productText = text;
                                                     if (selectedProduct !=
                                                             null &&
                                                         selectedProduct!.name !=
@@ -339,7 +423,86 @@ class _HomePageState extends State<HomePage> {
                               textAlign: TextAlign.center,
                             ),
                             content: Column(
-                              children: const <Widget>[],
+                              children: <Widget>[
+                                TableCalendar<TimeOfDay>(
+                                  calendarStyle: const CalendarStyle(
+                                    markerSize: 0,
+                                    selectedDecoration: BoxDecoration(
+                                      color: kPrimaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  firstDay: DateTime.now(),
+                                  lastDay: DateTime.utc(2030, 3, 14),
+                                  focusedDay: _focusedDay,
+                                  calendarFormat: CalendarFormat.week,
+                                  headerStyle: const HeaderStyle(
+                                    formatButtonVisible: false,
+                                    titleCentered: true,
+                                  ),
+                                  selectedDayPredicate: (day) =>
+                                      isSameDay(_selectedDay, day),
+                                  eventLoader: _getTimeForDay,
+                                  startingDayOfWeek: StartingDayOfWeek.monday,
+                                  onDaySelected: _onDaySelected,
+                                  onPageChanged: (focusedDay) {
+                                    _focusedDay = focusedDay;
+                                  },
+                                ),
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: times.length,
+                                  physics: const ScrollPhysics(),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount:
+                                        MediaQuery.of(context).orientation ==
+                                                Orientation.landscape
+                                            ? 9
+                                            : 3,
+                                  ),
+                                  itemBuilder: (context, index) =>
+                                      GestureDetector(
+                                    onTap: kTime[_focusedDay] != null &&
+                                            kTime[_focusedDay]!
+                                                .contains(times[index])
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              selectedIndex = index;
+                                              _focusedDay = DateTime(
+                                                _focusedDay.year,
+                                                _focusedDay.month,
+                                                _focusedDay.day,
+                                                times[index].hour,
+                                                times[index].minute,
+                                              );
+                                            });
+                                          },
+                                    child: Card(
+                                      color: selectedIndex == index
+                                          ? kPrimaryColor
+                                          : kTime[_focusedDay] != null &&
+                                                  kTime[_focusedDay]!
+                                                      .contains(times[index])
+                                              ? Colors.transparent
+                                              : null,
+                                      child: GridTile(
+                                        child: Center(
+                                          child: Text(
+                                            times[index].format(context),
+                                            style: TextStyle(
+                                              color: selectedIndex == index
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             isActive: _currentStep == 1,
                             state: _currentStep < 1
