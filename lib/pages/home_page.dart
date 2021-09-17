@@ -4,13 +4,15 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import 'package:spaceship_service/constants.dart';
+import 'package:spaceship_service/models/appointment_data.dart';
+import 'package:spaceship_service/models/cart_item.dart';
+import 'package:spaceship_service/models/product.dart';
+import 'package:spaceship_service/pages/result_page.dart';
+import 'package:spaceship_service/time_utils.dart';
 import 'package:spaceship_service/widgets/custom_stepper.dart';
 import 'package:table_calendar/table_calendar.dart';
-
-import 'constants.dart';
-import 'models/cart_item.dart';
-import 'models/product.dart';
-import 'time_utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key, required this.title}) : super(key: key);
@@ -44,10 +46,9 @@ class _HomePageState extends State<HomePage> {
       price: 25.50,
     ),
   ];
-  List<CartItem> cartItems = [];
   List<TimeOfDay> times = [];
 
-  addProduct() {
+  addCartItem() {
     bool isRealProduct =
         availableProducts.any((element) => element.name == productText);
     if (isRealProduct) {
@@ -56,8 +57,11 @@ class _HomePageState extends State<HomePage> {
     }
     setState(() {
       if (selectedProduct != null && quantityController.text.isNotEmpty) {
-        CartItem alreadyExist = cartItems.firstWhere(
-            (element) => element.product == selectedProduct, orElse: () {
+        CartItem alreadyExist =
+            Provider.of<AppointmentData>(context, listen: false)
+                .cartItems
+                .firstWhere((element) => element.product == selectedProduct,
+                    orElse: () {
           return CartItem(
             product: Product(
               name: 'noItem',
@@ -69,7 +73,7 @@ class _HomePageState extends State<HomePage> {
         if (alreadyExist.product.name != 'noItem') {
           alreadyExist.quantity += int.parse(quantityController.text);
         } else {
-          cartItems.add(
+          Provider.of<AppointmentData>(context, listen: false).addCartItem(
             CartItem(
               product: availableProducts
                   .firstWhere((element) => element == selectedProduct),
@@ -86,9 +90,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   DateTime? _selectedDay;
-  DateTime _focusedDay = DateTime.now();
   int selectedIndex = -1;
 
+  // get time slots by saying start time, end time and step
   Iterable<TimeOfDay> getTimes(
       TimeOfDay startTime, TimeOfDay endTime, Duration step) sync* {
     var hour = startTime.hour;
@@ -105,16 +109,6 @@ class _HomePageState extends State<HomePage> {
         (hour == endTime.hour && minute <= endTime.minute));
   }
 
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-        selectedIndex = -1;
-      });
-    }
-  }
-
   List<TimeOfDay> _getTimeForDay(DateTime day) {
     return kTime[day] ?? [];
   }
@@ -124,14 +118,29 @@ class _HomePageState extends State<HomePage> {
   }
 
   continued() {
-    if (_currentStep == 0 && cartItems.isEmpty) {
+    if (_currentStep == 0 &&
+        Provider.of<AppointmentData>(context, listen: false)
+            .cartItems
+            .isEmpty) {
       Fluttertoast.showToast(
         msg: "Adaugă ceva dacă vrei să continui",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
       );
-      debugPrint('t');
+    } else if (_currentStep == 1) {
+      if (selectedIndex == -1) {
+        Fluttertoast.showToast(
+          msg: "Selectează o oră pentru a continua.",
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ResultPage(),
+          ),
+        );
+      }
     } else {
+      productText = null;
+      selectedProduct = null;
       _currentStep < 1 ? setState(() => _currentStep += 1) : null;
     }
   }
@@ -143,26 +152,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
+    _selectedDay = DateTime.now();
 
     times = getTimes(
-      TimeOfDay.fromDateTime(
-        DateTime(
-          _focusedDay.year,
-          _focusedDay.month,
-          _focusedDay.day,
-          08,
-        ),
-      ),
-      TimeOfDay.fromDateTime(
-        DateTime(
-          _focusedDay.year,
-          _focusedDay.month,
-          _focusedDay.day,
-          16,
-          00,
-        ),
-      ),
+      const TimeOfDay(hour: 08, minute: 00),
+      const TimeOfDay(hour: 16, minute: 00),
       const Duration(hours: 1),
     ).map((tod) => tod).toList();
   }
@@ -222,88 +216,94 @@ class _HomePageState extends State<HomePage> {
                                     style: kBoldStyle,
                                   ),
                                 ),
-                                Table(
-                                  border: const TableBorder(
-                                    horizontalInside:
-                                        BorderSide(color: Colors.grey),
-                                    bottom: BorderSide(color: Colors.grey),
-                                  ),
-                                  defaultVerticalAlignment:
-                                      TableCellVerticalAlignment.middle,
-                                  columnWidths: const <int, TableColumnWidth>{
-                                    0: FlexColumnWidth(64),
-                                    1: FlexColumnWidth(64),
-                                    2: FlexColumnWidth(64),
-                                    3: FlexColumnWidth(34),
-                                    4: FlexColumnWidth(34),
-                                  },
-                                  children: <TableRow>[
-                                    TableRow(
-                                      children: <Widget>[
-                                        for (int i = 0;
-                                            i < columnNames.length;
-                                            i += 1)
-                                          Padding(
-                                            padding: i == 0
-                                                ? const EdgeInsets.only(
-                                                    left: 10)
-                                                : EdgeInsets.zero,
-                                            child: Text(
-                                              columnNames[i],
-                                              textAlign: i != 0
-                                                  ? TextAlign.center
-                                                  : null,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        const Text(''),
-                                      ],
-                                    ),
-                                    for (int i = 0;
-                                        i < cartItems.length;
-                                        i += 1)
-                                      TableRow(
-                                        children: <Widget>[
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(left: 10),
-                                            child: Text(
-                                              cartItems[i].product.name,
-                                              style: kTableCellStyle,
-                                            ),
-                                          ),
-                                          Text(
-                                            cartItems[i].quantity.toString(),
-                                            textAlign: TextAlign.center,
-                                            style: kTableCellStyle,
-                                          ),
-                                          Text(
-                                            '${cartItems[i].product.price}',
-                                            textAlign: TextAlign.center,
-                                            style: kTableCellStyle,
-                                          ),
-                                          Text(
-                                            '${cartItems[i].quantity * cartItems[i].product.price}',
-                                            textAlign: TextAlign.center,
-                                            style: kTableCellStyle,
-                                          ),
-                                          IconButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                cartItems.remove(cartItems[i]);
-                                              });
-                                            },
-                                            icon: const Icon(
-                                              Icons.close,
-                                              color: kPrimaryColor,
-                                            ),
-                                          ),
-                                        ],
+                                Consumer<AppointmentData>(
+                                  builder: (context, appointment, child) {
+                                    return Table(
+                                      border: const TableBorder(
+                                        horizontalInside:
+                                            BorderSide(color: Colors.grey),
+                                        bottom: BorderSide(color: Colors.grey),
                                       ),
-                                  ],
+                                      defaultVerticalAlignment:
+                                          TableCellVerticalAlignment.middle,
+                                      columnWidths: const <int,
+                                          TableColumnWidth>{
+                                        0: FlexColumnWidth(64),
+                                        1: FlexColumnWidth(64),
+                                        2: FlexColumnWidth(64),
+                                        3: FlexColumnWidth(34),
+                                        4: FlexColumnWidth(34),
+                                      },
+                                      children: [
+                                        TableRow(
+                                          children: <Widget>[
+                                            for (int i = 0;
+                                                i < columnNames.length;
+                                                i += 1)
+                                              Padding(
+                                                padding: i == 0
+                                                    ? const EdgeInsets.only(
+                                                        left: 10)
+                                                    : EdgeInsets.zero,
+                                                child: Text(
+                                                  columnNames[i],
+                                                  textAlign: i != 0
+                                                      ? TextAlign.center
+                                                      : null,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            const Text(''),
+                                          ],
+                                        ),
+                                        for (int i = 0;
+                                            i < appointment.cartItems.length;
+                                            i += 1)
+                                          TableRow(
+                                            children: <Widget>[
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 10),
+                                                child: Text(
+                                                  appointment.cartItems[i]
+                                                      .product.name,
+                                                  style: kTableCellStyle,
+                                                ),
+                                              ),
+                                              Text(
+                                                appointment
+                                                    .cartItems[i].quantity
+                                                    .toString(),
+                                                textAlign: TextAlign.center,
+                                                style: kTableCellStyle,
+                                              ),
+                                              Text(
+                                                '${appointment.cartItems[i].product.price}',
+                                                textAlign: TextAlign.center,
+                                                style: kTableCellStyle,
+                                              ),
+                                              Text(
+                                                '${appointment.cartItems[i].total}',
+                                                textAlign: TextAlign.center,
+                                                style: kTableCellStyle,
+                                              ),
+                                              IconButton(
+                                                onPressed: () {
+                                                  appointment.removeCartItem(i);
+                                                },
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                  color: kPrimaryColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                      ],
+                                    );
+                                  },
                                 ),
                                 Padding(
                                   padding:
@@ -398,7 +398,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       ElevatedButton(
-                                        onPressed: addProduct,
+                                        onPressed: addCartItem,
                                         child: const Icon(
                                           Icons.add,
                                           color: Colors.white,
@@ -422,87 +422,105 @@ class _HomePageState extends State<HomePage> {
                               'Stabilește \nora',
                               textAlign: TextAlign.center,
                             ),
-                            content: Column(
-                              children: <Widget>[
-                                TableCalendar<TimeOfDay>(
-                                  calendarStyle: const CalendarStyle(
-                                    markerSize: 0,
-                                    selectedDecoration: BoxDecoration(
-                                      color: kPrimaryColor,
-                                      shape: BoxShape.circle,
+                            content: Consumer<AppointmentData>(
+                              builder: (context, appointment, child) {
+                                return Column(
+                                  children: <Widget>[
+                                    TableCalendar<TimeOfDay>(
+                                      calendarStyle: const CalendarStyle(
+                                        markerSize: 0,
+                                        selectedDecoration: BoxDecoration(
+                                          color: kPrimaryColor,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      firstDay: DateTime.now(),
+                                      lastDay: DateTime.utc(2030, 3, 14),
+                                      focusedDay: appointment.date,
+                                      calendarFormat: CalendarFormat.week,
+                                      headerStyle: const HeaderStyle(
+                                        formatButtonVisible: false,
+                                        titleCentered: true,
+                                      ),
+                                      selectedDayPredicate: (day) =>
+                                          isSameDay(_selectedDay, day),
+                                      eventLoader: _getTimeForDay,
+                                      startingDayOfWeek:
+                                          StartingDayOfWeek.monday,
+                                      onDaySelected: (DateTime selectedDay,
+                                          DateTime focusedDay) {
+                                        if (!isSameDay(
+                                            _selectedDay, selectedDay)) {
+                                          setState(() {
+                                            _selectedDay = selectedDay;
+                                            selectedIndex = -1;
+                                          });
+                                          appointment.changeDate(focusedDay);
+                                        }
+                                      },
+                                      onPageChanged: (focusedDay) {
+                                        appointment.date = focusedDay;
+                                      },
                                     ),
-                                  ),
-                                  firstDay: DateTime.now(),
-                                  lastDay: DateTime.utc(2030, 3, 14),
-                                  focusedDay: _focusedDay,
-                                  calendarFormat: CalendarFormat.week,
-                                  headerStyle: const HeaderStyle(
-                                    formatButtonVisible: false,
-                                    titleCentered: true,
-                                  ),
-                                  selectedDayPredicate: (day) =>
-                                      isSameDay(_selectedDay, day),
-                                  eventLoader: _getTimeForDay,
-                                  startingDayOfWeek: StartingDayOfWeek.monday,
-                                  onDaySelected: _onDaySelected,
-                                  onPageChanged: (focusedDay) {
-                                    _focusedDay = focusedDay;
-                                  },
-                                ),
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: times.length,
-                                  physics: const ScrollPhysics(),
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount:
-                                        MediaQuery.of(context).orientation ==
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: times.length,
+                                      physics: const ScrollPhysics(),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: MediaQuery.of(context)
+                                                    .orientation ==
                                                 Orientation.landscape
                                             ? 9
                                             : 3,
-                                  ),
-                                  itemBuilder: (context, index) =>
-                                      GestureDetector(
-                                    onTap: kTime[_focusedDay] != null &&
-                                            kTime[_focusedDay]!
-                                                .contains(times[index])
-                                        ? null
-                                        : () {
-                                            setState(() {
-                                              selectedIndex = index;
-                                              _focusedDay = DateTime(
-                                                _focusedDay.year,
-                                                _focusedDay.month,
-                                                _focusedDay.day,
-                                                times[index].hour,
-                                                times[index].minute,
-                                              );
-                                            });
-                                          },
-                                    child: Card(
-                                      color: selectedIndex == index
-                                          ? kPrimaryColor
-                                          : kTime[_focusedDay] != null &&
-                                                  kTime[_focusedDay]!
-                                                      .contains(times[index])
-                                              ? Colors.transparent
-                                              : null,
-                                      child: GridTile(
-                                        child: Center(
-                                          child: Text(
-                                            times[index].format(context),
-                                            style: TextStyle(
-                                              color: selectedIndex == index
-                                                  ? Colors.white
-                                                  : Colors.black,
+                                      ),
+                                      itemBuilder: (context, index) =>
+                                          GestureDetector(
+                                        onTap: kTime[appointment.date] !=
+                                                    null &&
+                                                kTime[appointment.date]!
+                                                    .contains(times[index])
+                                            ? null
+                                            : () {
+                                                setState(() {
+                                                  selectedIndex = index;
+                                                  appointment.date = DateTime(
+                                                    appointment.date.year,
+                                                    appointment.date.month,
+                                                    appointment.date.day,
+                                                    times[index].hour,
+                                                    times[index].minute,
+                                                  );
+                                                });
+                                              },
+                                        child: Card(
+                                          color: selectedIndex == index
+                                              ? kPrimaryColor
+                                              : kTime[appointment.date] !=
+                                                          null &&
+                                                      kTime[appointment.date]!
+                                                          .contains(
+                                                              times[index])
+                                                  ? Colors.transparent
+                                                  : null,
+                                          child: GridTile(
+                                            child: Center(
+                                              child: Text(
+                                                times[index].format(context),
+                                                style: TextStyle(
+                                                  color: selectedIndex == index
+                                                      ? Colors.white
+                                                      : Colors.black,
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ],
+                                  ],
+                                );
+                              },
                             ),
                             isActive: _currentStep == 1,
                             state: _currentStep < 1
