@@ -80,6 +80,98 @@ class _ResultPageState extends State<ResultPage> {
     ),
   ];
 
+  // FocusNode? _node;
+  // bool _focused = false;
+  bool searchPressed = false;
+  String _searchText = "";
+  List<RepairStation> filteredStations = [];
+
+  void onSearch(text) {
+    filteredStations = [];
+    setState(() {
+      _searchText = text;
+    });
+    _getStations();
+  }
+
+  void _getStations() async {
+    for (int i = 0; i < repairStations.length; i++) {
+      if (repairStations[i]
+              .name
+              .toLowerCase()
+              .contains(_searchText.toLowerCase()) &&
+          !filteredStations.contains(repairStations[i])) {
+        setState(() {
+          filteredStations.add(repairStations[i]);
+        });
+      }
+    }
+  }
+
+  Widget _buildList() {
+    List<RepairStation> stations = [];
+    if (_searchText != "" && filteredStations.isNotEmpty) {
+      stations = filteredStations;
+    } else {
+      stations = repairStations;
+    }
+
+    return Flexible(
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 30),
+        shrinkWrap: true,
+        itemCount: stations.length,
+        physics: const ScrollPhysics(),
+        itemBuilder: (context, index) => GestureDetector(
+          child: SizedBox(
+            height: 150,
+            child: Card(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          stations[index].name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        RatingBarIndicator(
+                          rating: stations[index].rating,
+                          itemBuilder: (context, index) => const Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                          ),
+                          itemCount: 5,
+                          itemSize: 15.0,
+                          direction: Axis.horizontal,
+                        ),
+                        const Expanded(child: SizedBox()),
+                        Text(
+                          'Timp Estimat: ${stations[index].time.inHours} h ${stations[index].time.inMinutes.remainder(60)} min.',
+                        ),
+                        Text(
+                          'Cost Estimat: ${stations[index].price} RON',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Expanded(child: SizedBox()),
+                  Image.asset(stations[index].image)
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,7 +253,7 @@ class _ResultPageState extends State<ResultPage> {
                 },
               ),
               const Padding(
-                padding: EdgeInsets.only(bottom: 20, top: 20),
+                padding: EdgeInsets.only(bottom: 5, top: 20),
                 child: Text(
                   'Ofertanți',
                   style: TextStyle(
@@ -170,60 +262,28 @@ class _ResultPageState extends State<ResultPage> {
                   ),
                 ),
               ),
-              Flexible(
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 30),
-                  shrinkWrap: true,
-                  itemCount: repairStations.length,
-                  physics: const ScrollPhysics(),
-                  itemBuilder: (context, index) => GestureDetector(
-                    child: SizedBox(
-                      height: 150,
-                      child: Card(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    repairStations[index].name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  RatingBarIndicator(
-                                    rating: repairStations[index].rating,
-                                    itemBuilder: (context, index) => const Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                    ),
-                                    itemCount: 5,
-                                    itemSize: 15.0,
-                                    direction: Axis.horizontal,
-                                  ),
-                                  const Expanded(child: SizedBox()),
-                                  Text(
-                                    'Timp Estimat: ${repairStations[index].time.inHours} h ${repairStations[index].time.inMinutes.remainder(60)} min.',
-                                  ),
-                                  Text(
-                                    'Cost Estimat: ${repairStations[index].price} RON',
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Expanded(child: SizedBox()),
-                            Image.asset(repairStations[index].image)
-                          ],
-                        ),
-                      ),
-                    ),
+              SizedBox(
+                width: (MediaQuery.of(context).size.width / 100) * 60,
+                child: TextField(
+                  onSubmitted: (text) {
+                    onSearch(text);
+                  },
+                  onChanged: (text) {
+                    onSearch(text);
+                  },
+                  style: const TextStyle(
+                    fontSize: 16,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: 'Caută ofertant',
+                    suffixIconConstraints: BoxConstraints.tightFor(height: 20),
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    suffixIcon: Icon(Icons.search),
                   ),
                 ),
               ),
+              _buildList(),
             ],
           ),
         ),

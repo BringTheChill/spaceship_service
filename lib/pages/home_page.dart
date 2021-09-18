@@ -364,11 +364,11 @@ class _HomePageState extends State<HomePage> {
                                                     Icons.search,
                                                     size: 20,
                                                   ),
+                                                  hintText: availableProducts
+                                                      .first.name,
                                                   suffixIconConstraints:
                                                       const BoxConstraints
                                                           .tightFor(height: 20),
-                                                  hintText: availableProducts
-                                                      .first.name,
                                                   isDense: true,
                                                   contentPadding:
                                                       EdgeInsets.zero,
