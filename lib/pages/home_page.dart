@@ -188,348 +188,322 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height - 40.0,
-                      child: CustomStepper(
-                        type: stepperType,
-                        physics: const ClampingScrollPhysics(),
-                        currentStep: _currentStep,
-                        onStepTapped: (step) => tapped(step),
-                        onStepContinue: continued,
-                        onStepCancel: cancel,
-                        steps: <Step>[
-                          Step(
-                            title: const Text(
-                              'Crează \ndeviz',
-                              maxLines: 2,
-                              textAlign: TextAlign.center,
+                  child: CustomStepper(
+                    type: stepperType,
+                    physics: const ClampingScrollPhysics(),
+                    currentStep: _currentStep,
+                    onStepTapped: (step) => tapped(step),
+                    onStepContinue: continued,
+                    onStepCancel: cancel,
+                    steps: <Step>[
+                      Step(
+                        title: const Text(
+                          'Crează \ndeviz',
+                          maxLines: 2,
+                          textAlign: TextAlign.center,
+                        ),
+                        content: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const Padding(
+                              padding: EdgeInsets.only(
+                                  left: 10, bottom: 20, top: 20),
+                              child: Text(
+                                'Task 1',
+                                style: kBoldStyle,
+                              ),
                             ),
-                            content: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                const Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 10, bottom: 20, top: 20),
-                                  child: Text(
-                                    'Task 1',
-                                    style: kBoldStyle,
+                            Consumer<AppointmentData>(
+                              builder: (context, appointment, child) {
+                                return Table(
+                                  border: const TableBorder(
+                                    horizontalInside:
+                                        BorderSide(color: Colors.grey),
+                                    bottom: BorderSide(color: Colors.grey),
                                   ),
-                                ),
-                                Consumer<AppointmentData>(
-                                  builder: (context, appointment, child) {
-                                    return Table(
-                                      border: const TableBorder(
-                                        horizontalInside:
-                                            BorderSide(color: Colors.grey),
-                                        bottom: BorderSide(color: Colors.grey),
-                                      ),
-                                      defaultVerticalAlignment:
-                                          TableCellVerticalAlignment.middle,
-                                      columnWidths: const <int,
-                                          TableColumnWidth>{
-                                        0: FlexColumnWidth(64),
-                                        1: FlexColumnWidth(64),
-                                        2: FlexColumnWidth(64),
-                                        3: FlexColumnWidth(34),
-                                        4: FlexColumnWidth(34),
-                                      },
-                                      children: [
-                                        TableRow(
-                                          children: <Widget>[
-                                            for (int i = 0;
-                                                i < columnNames.length;
-                                                i += 1)
-                                              Padding(
-                                                padding: i == 0
-                                                    ? const EdgeInsets.only(
-                                                        left: 10)
-                                                    : EdgeInsets.zero,
-                                                child: Text(
-                                                  columnNames[i],
-                                                  textAlign: i != 0
-                                                      ? TextAlign.center
-                                                      : null,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            const Text(''),
-                                          ],
-                                        ),
+                                  defaultVerticalAlignment:
+                                      TableCellVerticalAlignment.middle,
+                                  columnWidths: const <int, TableColumnWidth>{
+                                    0: FlexColumnWidth(64),
+                                    1: FlexColumnWidth(64),
+                                    2: FlexColumnWidth(64),
+                                    3: FlexColumnWidth(34),
+                                    4: FlexColumnWidth(34),
+                                  },
+                                  children: [
+                                    TableRow(
+                                      children: <Widget>[
                                         for (int i = 0;
-                                            i < appointment.cartItems.length;
+                                            i < columnNames.length;
                                             i += 1)
-                                          TableRow(
-                                            children: <Widget>[
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 10),
-                                                child: Text(
-                                                  appointment.cartItems[i]
-                                                      .product.name,
-                                                  style: kTableCellStyle,
-                                                ),
+                                          Padding(
+                                            padding: i == 0
+                                                ? const EdgeInsets.only(
+                                                    left: 10)
+                                                : EdgeInsets.zero,
+                                            child: Text(
+                                              columnNames[i],
+                                              textAlign: i != 0
+                                                  ? TextAlign.center
+                                                  : null,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              Text(
-                                                appointment
-                                                    .cartItems[i].quantity
-                                                    .toString(),
-                                                textAlign: TextAlign.center,
-                                                style: kTableCellStyle,
-                                              ),
-                                              Text(
-                                                '${appointment.cartItems[i].product.price}',
-                                                textAlign: TextAlign.center,
-                                                style: kTableCellStyle,
-                                              ),
-                                              Text(
-                                                '${appointment.cartItems[i].total}',
-                                                textAlign: TextAlign.center,
-                                                style: kTableCellStyle,
-                                              ),
-                                              IconButton(
-                                                onPressed: () {
-                                                  appointment.removeCartItem(i);
-                                                },
-                                                icon: const Icon(
-                                                  Icons.close,
-                                                  color: kPrimaryColor,
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
+                                        const Text(''),
                                       ],
-                                    );
+                                    ),
+                                    for (int i = 0;
+                                        i < appointment.cartItems.length;
+                                        i += 1)
+                                      TableRow(
+                                        children: <Widget>[
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(left: 10),
+                                            child: Text(
+                                              appointment
+                                                  .cartItems[i].product.name,
+                                              style: kTableCellStyle,
+                                            ),
+                                          ),
+                                          Text(
+                                            appointment.cartItems[i].quantity
+                                                .toString(),
+                                            textAlign: TextAlign.center,
+                                            style: kTableCellStyle,
+                                          ),
+                                          Text(
+                                            '${appointment.cartItems[i].product.price}',
+                                            textAlign: TextAlign.center,
+                                            style: kTableCellStyle,
+                                          ),
+                                          Text(
+                                            '${appointment.cartItems[i].total}',
+                                            textAlign: TextAlign.center,
+                                            style: kTableCellStyle,
+                                          ),
+                                          IconButton(
+                                            onPressed: () {
+                                              appointment.removeCartItem(i);
+                                            },
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: kPrimaryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                );
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10, top: 10),
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(right: 10.0),
+                                      child: Autocomplete<Product>(
+                                        optionsBuilder: (TextEditingValue
+                                            textEditingValue) {
+                                          if (textEditingValue.text.isEmpty) {
+                                            return const Iterable<
+                                                Product>.empty();
+                                          } else {
+                                            return availableProducts.where(
+                                                (Product element) => element
+                                                    .name
+                                                    .toString()
+                                                    .toLowerCase()
+                                                    .contains(textEditingValue
+                                                        .text
+                                                        .toLowerCase()));
+                                          }
+                                        },
+                                        onSelected: (Product selection) {
+                                          selectedProduct = selection;
+                                        },
+                                        fieldViewBuilder: (context, controller,
+                                            focusNode, onEditingComplete) {
+                                          return TextField(
+                                            controller: controller,
+                                            focusNode: focusNode,
+                                            onChanged: (text) {
+                                              setState(() {
+                                                productText = text;
+                                                if (selectedProduct != null &&
+                                                    selectedProduct!.name !=
+                                                        text) {
+                                                  selectedProduct = null;
+                                                }
+                                              });
+                                            },
+                                            decoration: InputDecoration(
+                                              suffixIcon: const Icon(
+                                                Icons.search,
+                                                size: 20,
+                                              ),
+                                              hintText:
+                                                  availableProducts.first.name,
+                                              suffixIconConstraints:
+                                                  const BoxConstraints.tightFor(
+                                                      height: 20),
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 30,
+                                    child: TextField(
+                                      controller: quantityController,
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: <TextInputFormatter>[
+                                        FilteringTextInputFormatter.allow(
+                                            RegExp(r'[0-9]')),
+                                      ],
+                                      decoration: const InputDecoration(
+                                        isDense: true,
+                                        hintText: '0',
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: addCartItem,
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      shape: const CircleBorder(),
+                                    ),
+                                  ),
+                                  const Expanded(child: SizedBox()),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        isActive: _currentStep == 0,
+                        state: _currentStep == 0
+                            ? StepState.indexed
+                            : StepState.complete,
+                      ),
+                      Step(
+                        title: const Text(
+                          'Stabilește \nora',
+                          textAlign: TextAlign.center,
+                        ),
+                        content: Consumer<AppointmentData>(
+                          builder: (context, appointment, child) {
+                            return Column(
+                              children: <Widget>[
+                                TableCalendar<TimeOfDay>(
+                                  calendarStyle: const CalendarStyle(
+                                    markerSize: 0,
+                                    selectedDecoration: BoxDecoration(
+                                      color: kPrimaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  firstDay: DateTime.now(),
+                                  lastDay: DateTime.utc(2030, 3, 14),
+                                  focusedDay: appointment.date,
+                                  calendarFormat: CalendarFormat.week,
+                                  headerStyle: const HeaderStyle(
+                                    formatButtonVisible: false,
+                                    titleCentered: true,
+                                  ),
+                                  selectedDayPredicate: (day) =>
+                                      isSameDay(_selectedDay, day),
+                                  eventLoader: _getTimeForDay,
+                                  startingDayOfWeek: StartingDayOfWeek.monday,
+                                  onDaySelected: (DateTime selectedDay,
+                                      DateTime focusedDay) {
+                                    if (!isSameDay(_selectedDay, selectedDay)) {
+                                      setState(() {
+                                        _selectedDay = selectedDay;
+                                        selectedIndex = -1;
+                                      });
+                                      appointment.changeDate(focusedDay);
+                                    }
+                                  },
+                                  onPageChanged: (focusedDay) {
+                                    appointment.date = focusedDay;
                                   },
                                 ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(left: 10, top: 10),
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 10.0),
-                                        child: SizedBox(
-                                          width: (MediaQuery.of(context)
-                                                      .size
-                                                      .width /
-                                                  100) *
-                                              30,
-                                          child: Autocomplete<Product>(
-                                            optionsBuilder: (TextEditingValue
-                                                textEditingValue) {
-                                              if (textEditingValue
-                                                  .text.isEmpty) {
-                                                return const Iterable<
-                                                    Product>.empty();
-                                              } else {
-                                                return availableProducts.where(
-                                                    (Product element) => element
-                                                        .name
-                                                        .toString()
-                                                        .toLowerCase()
-                                                        .contains(
-                                                            textEditingValue
-                                                                .text
-                                                                .toLowerCase()));
-                                              }
-                                            },
-                                            onSelected: (Product selection) {
-                                              selectedProduct = selection;
-                                            },
-                                            fieldViewBuilder: (context,
-                                                controller,
-                                                focusNode,
-                                                onEditingComplete) {
-                                              return TextField(
-                                                controller: controller,
-                                                focusNode: focusNode,
-                                                onChanged: (text) {
-                                                  setState(() {
-                                                    productText = text;
-                                                    if (selectedProduct !=
-                                                            null &&
-                                                        selectedProduct!.name !=
-                                                            text) {
-                                                      selectedProduct = null;
-                                                    }
-                                                  });
-                                                },
-                                                decoration: InputDecoration(
-                                                  suffixIcon: const Icon(
-                                                    Icons.search,
-                                                    size: 20,
-                                                  ),
-                                                  hintText: availableProducts
-                                                      .first.name,
-                                                  suffixIconConstraints:
-                                                      const BoxConstraints
-                                                          .tightFor(height: 20),
-                                                  isDense: true,
-                                                  contentPadding:
-                                                      EdgeInsets.zero,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width:
-                                            (MediaQuery.of(context).size.width /
-                                                    100) *
-                                                10,
-                                        child: TextField(
-                                          controller: quantityController,
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: <TextInputFormatter>[
-                                            FilteringTextInputFormatter.allow(
-                                                RegExp(r'[0-9]')),
-                                          ],
-                                          decoration: const InputDecoration(
-                                            isDense: true,
-                                            hintText: '0',
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: addCartItem,
-                                        child: const Icon(
-                                          Icons.add,
-                                          color: Colors.white,
-                                        ),
-                                        style: ElevatedButton.styleFrom(
-                                          shape: const CircleBorder(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            isActive: _currentStep == 0,
-                            state: _currentStep == 0
-                                ? StepState.indexed
-                                : StepState.complete,
-                          ),
-                          Step(
-                            title: const Text(
-                              'Stabilește \nora',
-                              textAlign: TextAlign.center,
-                            ),
-                            content: Consumer<AppointmentData>(
-                              builder: (context, appointment, child) {
-                                return Column(
-                                  children: <Widget>[
-                                    TableCalendar<TimeOfDay>(
-                                      calendarStyle: const CalendarStyle(
-                                        markerSize: 0,
-                                        selectedDecoration: BoxDecoration(
-                                          color: kPrimaryColor,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      firstDay: DateTime.now(),
-                                      lastDay: DateTime.utc(2030, 3, 14),
-                                      focusedDay: appointment.date,
-                                      calendarFormat: CalendarFormat.week,
-                                      headerStyle: const HeaderStyle(
-                                        formatButtonVisible: false,
-                                        titleCentered: true,
-                                      ),
-                                      selectedDayPredicate: (day) =>
-                                          isSameDay(_selectedDay, day),
-                                      eventLoader: _getTimeForDay,
-                                      startingDayOfWeek:
-                                          StartingDayOfWeek.monday,
-                                      onDaySelected: (DateTime selectedDay,
-                                          DateTime focusedDay) {
-                                        if (!isSameDay(
-                                            _selectedDay, selectedDay)) {
-                                          setState(() {
-                                            _selectedDay = selectedDay;
-                                            selectedIndex = -1;
-                                          });
-                                          appointment.changeDate(focusedDay);
-                                        }
-                                      },
-                                      onPageChanged: (focusedDay) {
-                                        appointment.date = focusedDay;
-                                      },
-                                    ),
-                                    GridView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: times.length,
-                                      physics: const ScrollPhysics(),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: MediaQuery.of(context)
-                                                    .orientation ==
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: times.length,
+                                  physics: const ScrollPhysics(),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount:
+                                        MediaQuery.of(context).orientation ==
                                                 Orientation.landscape
                                             ? 9
                                             : 3,
-                                      ),
-                                      itemBuilder: (context, index) =>
-                                          GestureDetector(
-                                        onTap: kTime[appointment.date] !=
-                                                    null &&
-                                                kTime[appointment.date]!
-                                                    .contains(times[index])
-                                            ? null
-                                            : () {
-                                                setState(() {
-                                                  selectedIndex = index;
-                                                  appointment.date = DateTime(
-                                                    appointment.date.year,
-                                                    appointment.date.month,
-                                                    appointment.date.day,
-                                                    times[index].hour,
-                                                    times[index].minute,
-                                                  );
-                                                });
-                                              },
-                                        child: Card(
-                                          color: selectedIndex == index
-                                              ? kPrimaryColor
-                                              : kTime[appointment.date] !=
-                                                          null &&
-                                                      kTime[appointment.date]!
-                                                          .contains(
-                                                              times[index])
-                                                  ? Colors.transparent
-                                                  : null,
-                                          child: GridTile(
-                                            child: Center(
-                                              child: Text(
-                                                times[index].format(context),
-                                                style: TextStyle(
-                                                  color: selectedIndex == index
-                                                      ? Colors.white
-                                                      : Colors.black,
-                                                ),
-                                              ),
+                                  ),
+                                  itemBuilder: (context, index) =>
+                                      GestureDetector(
+                                    onTap: kTime[appointment.date] != null &&
+                                            kTime[appointment.date]!
+                                                .contains(times[index])
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              selectedIndex = index;
+                                              appointment.date = DateTime(
+                                                appointment.date.year,
+                                                appointment.date.month,
+                                                appointment.date.day,
+                                                times[index].hour,
+                                                times[index].minute,
+                                              );
+                                            });
+                                          },
+                                    child: Card(
+                                      color: selectedIndex == index
+                                          ? kPrimaryColor
+                                          : kTime[appointment.date] != null &&
+                                                  kTime[appointment.date]!
+                                                      .contains(times[index])
+                                              ? Colors.transparent
+                                              : null,
+                                      child: GridTile(
+                                        child: Center(
+                                          child: Text(
+                                            times[index].format(context),
+                                            style: TextStyle(
+                                              color: selectedIndex == index
+                                                  ? Colors.white
+                                                  : Colors.black,
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ],
-                                );
-                              },
-                            ),
-                            isActive: _currentStep == 1,
-                            state: _currentStep < 1
-                                ? StepState.disabled
-                                : StepState.indexed,
-                          ),
-                        ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        isActive: _currentStep == 1,
+                        state: _currentStep < 1
+                            ? StepState.disabled
+                            : StepState.indexed,
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],

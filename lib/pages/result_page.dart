@@ -194,8 +194,8 @@ class ResultPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
-                width: (MediaQuery.of(context).size.width / 100) * 60,
+              Padding(
+                padding: const EdgeInsets.only(left: 50, right: 50),
                 child: Consumer<SearchData>(
                   builder: (context, searchData, child) {
                     return TextField(
