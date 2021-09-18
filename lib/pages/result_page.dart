@@ -9,17 +9,14 @@ import 'package:spaceship_service/constants.dart';
 import 'package:spaceship_service/models/appointment_data.dart';
 import 'package:spaceship_service/models/car.dart';
 import 'package:spaceship_service/models/repair_station.dart';
+import 'package:spaceship_service/models/search_data.dart';
 import 'package:spaceship_service/models/user.dart';
+import 'package:spaceship_service/widgets/custom_radio.dart';
 
-class ResultPage extends StatefulWidget {
-  const ResultPage({Key? key}) : super(key: key);
+class ResultPage extends StatelessWidget {
+  ResultPage({Key? key}) : super(key: key);
 
-  @override
-  State<ResultPage> createState() => _ResultPageState();
-}
-
-class _ResultPageState extends State<ResultPage> {
-  User user = User(
+  final User user = User(
     cars: [
       Car(
         manufacturer: 'SEAT',
@@ -35,85 +32,14 @@ class _ResultPageState extends State<ResultPage> {
       ),
     ],
   );
-  List<RepairStation> repairStations = [
-    RepairStation(
-      name: 'EasyRepair',
-      rating: 3.5,
-      price: 30,
-      time: const Duration(minutes: 30),
-      image: 'assets/images/repairStation.jpg',
-    ),
-    RepairStation(
-      name: 'FixAndGO',
-      rating: 5,
-      price: 50,
-      time: const Duration(hours: 1),
-      image: 'assets/images/repairStation.jpg',
-    ),
-    RepairStation(
-      name: 'BetterMotorWorks',
-      rating: 1,
-      price: 60,
-      time: const Duration(minutes: 10),
-      image: 'assets/images/repairStation.jpg',
-    ),
-    RepairStation(
-      name: 'GalaxySRL',
-      rating: 4,
-      price: 30,
-      time: const Duration(minutes: 30),
-      image: 'assets/images/repairStation.jpg',
-    ),
-    RepairStation(
-      name: 'StarService',
-      rating: 2,
-      price: 20,
-      time: const Duration(hours: 1, minutes: 30),
-      image: 'assets/images/repairStation.jpg',
-    ),
-    RepairStation(
-      name: 'SpaceshipDone',
-      rating: 3,
-      price: 30,
-      time: const Duration(minutes: 30),
-      image: 'assets/images/repairStation.jpg',
-    ),
-  ];
 
-  // FocusNode? _node;
-  // bool _focused = false;
-  bool searchPressed = false;
-  String _searchText = "";
-  List<RepairStation> filteredStations = [];
-
-  void onSearch(text) {
-    filteredStations = [];
-    setState(() {
-      _searchText = text;
-    });
-    _getStations();
-  }
-
-  void _getStations() async {
-    for (int i = 0; i < repairStations.length; i++) {
-      if (repairStations[i]
-              .name
-              .toLowerCase()
-              .contains(_searchText.toLowerCase()) &&
-          !filteredStations.contains(repairStations[i])) {
-        setState(() {
-          filteredStations.add(repairStations[i]);
-        });
-      }
-    }
-  }
-
-  Widget _buildList() {
+  Widget _buildList(SearchData searchData) {
     List<RepairStation> stations = [];
-    if (_searchText != "" && filteredStations.isNotEmpty) {
-      stations = filteredStations;
+
+    if (searchData.filteredStations.isNotEmpty) {
+      stations = searchData.filteredStations;
     } else {
-      stations = repairStations;
+      stations = searchData.repairStations;
     }
 
     return Flexible(
@@ -170,6 +96,12 @@ class _ResultPageState extends State<ResultPage> {
         ),
       ),
     );
+  }
+
+  void onChanged(int? val, SearchData searchData) {
+    if (val != null) {
+      searchData.sortList(val);
+    }
   }
 
   @override
@@ -264,26 +196,78 @@ class _ResultPageState extends State<ResultPage> {
               ),
               SizedBox(
                 width: (MediaQuery.of(context).size.width / 100) * 60,
-                child: TextField(
-                  onSubmitted: (text) {
-                    onSearch(text);
+                child: Consumer<SearchData>(
+                  builder: (context, searchData, child) {
+                    return TextField(
+                      onSubmitted: (text) {
+                        searchData.getStations(text);
+                      },
+                      onChanged: (text) {
+                        searchData.getStations(text);
+                      },
+                      style: const TextStyle(
+                        fontSize: 16,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Caută ofertant',
+                        suffixIconConstraints:
+                            BoxConstraints.tightFor(height: 20),
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        suffixIcon: Icon(Icons.search),
+                      ),
+                    );
                   },
-                  onChanged: (text) {
-                    onSearch(text);
-                  },
-                  style: const TextStyle(
-                    fontSize: 16,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'Caută ofertant',
-                    suffixIconConstraints: BoxConstraints.tightFor(height: 20),
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    suffixIcon: Icon(Icons.search),
-                  ),
                 ),
               ),
-              _buildList(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Consumer<SearchData>(
+                  builder: (context, searchData, child) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'sortare după: ',
+                          style: TextStyle(
+                            color: Colors.black45,
+                          ),
+                        ),
+                        Flexible(
+                          child: CustomRadio(
+                            value: 1,
+                            groupValue: searchData.selectedId,
+                            label: 'Rating',
+                            activeColor: kPrimaryColor,
+                            onChanged: (int? val) => onChanged(val, searchData),
+                          ),
+                        ),
+                        Flexible(
+                          child: CustomRadio(
+                            value: 2,
+                            groupValue: searchData.selectedId,
+                            label: 'Preț',
+                            activeColor: kPrimaryColor,
+                            onChanged: (int? val) => onChanged(val, searchData),
+                          ),
+                        ),
+                        Flexible(
+                          child: CustomRadio(
+                            value: 3,
+                            groupValue: searchData.selectedId,
+                            label: 'Timp',
+                            activeColor: kPrimaryColor,
+                            onChanged: (int? val) => onChanged(val, searchData),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              Consumer<SearchData>(
+                builder: (context, searchData, child) => _buildList(searchData),
+              ),
             ],
           ),
         ),
