@@ -8,7 +8,7 @@ final kTime = LinkedHashMap<DateTime, List<TimeOfDay>>(
   hashCode: getHashCode,
 )..addAll(_kTimeSource);
 
-// Ore ocupate
+// Hours taken
 final _kTimeSource = {
   kToday: [
     TimeOfDay.fromDateTime(
